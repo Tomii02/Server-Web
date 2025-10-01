@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="webTitle">Tata Cake Shop - Toko Makanan Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #ef4444; /* Merah untuk makanan */
+            --primary-hover: #dc2626;
+            --secondary-color: #10b981; /* Hijau untuk sukses/admin */
+            --secondary-hover: #059669;
+            --background-color: #f7f7f7;
+            --card-background: #ffffff;
+            --text-color: #1f2937;
+        }
+        body {
+            background: var(--background-color);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            position: relative;
+        }
+        .header-bg {
+            background: var(--card-background);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .product-card {
+            background-color: var(--card-background);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            padding: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+        .product-img {
+            height: 150px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .buy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        .buy-btn:hover {
+            background-color: var(--primary-hover);
+        }
+        .admin-btn {
+            background-color: var(--secondary-color);
+        }
+        .admin-btn:hover {
+            background-color: var(--secondary-hover);
+        }
+        .dana-btn {
+            background-color: #1da1f2; /* Warna biru DANA */
+            transition: background-color 0.2s;
+        }
+        .dana-btn:hover {
+            background-color: #0c85d0;
+        }
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 9999px;
+            padding: 0 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+        }
+        .input-field {
+            border: 1px solid #d1d5db;
+            color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="header-bg py-4 px-6 mb-8 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center">
+            <h1 class="text-2xl font-bold text-red-500" id="webNameDisplay"><i class="fas fa-utensils mr-2"></i>TomiFood</h1>
+        </div>
+        <nav class="flex items-center space-x-4">
+            
+            <a href="#" onclick="showPasswordModal(); return false;" class="text-gray-700 hover:text-red-500 font-medium">
+                <i class="fas fa-user-shield mr-1"></i> Admin
+            </a>
+            
+            <div id="cartIconContainer" class="relative cursor-pointer" onclick="showCartModal()">
+                <i class="fas fa-shopping-cart text-xl text-gray-700 hover:text-red-500"></i>
+                <span id="cartCount" class="cart-count hidden">0</span>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-6 text-gray-800"><i class="fas fa-list-alt mr-2"></i> Menu Hari Ini</h2>
+
+        <div id="productList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            </div>
+
+        <div id="noProducts" class="text-center py-20 text-gray-500" style="display: none;">
+            <p class="text-xl"><i class="fas fa-sad-tear mr-2"></i> Belum ada produk makanan tersedia.</p>
+            <p>Silakan edit file `config-web.json` di Gist GitHub Anda!</p>
+        </div>
+    </main>
+    
+    <div id="passwordModal" class="modal">
+        <div class="modal-content max-w-sm">
+            <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold">Akses Dashboard Admin</h2>
+                <span class="close-btn cursor-pointer text-3xl text-gray-400 hover:text-red-500" onclick="closeModal('passwordModal')">&times;</span>
+            </div>
+            <form id="passwordForm">
+                <div class="mb-4">
+                    <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="adminPassword" placeholder="Masukkan password (Contoh: 4321)" class="input-field w-full p-3 rounded-lg text-sm" required>
+                </div>
+                <button type="submit" class="admin-btn py-3 px-4 rounded-lg w-full font-semibold text-white shadow-md">
+                    <i class="fas fa-lock-open mr-2"></i> Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="adminDashboardModal" class="modal">
+        <div class="modal-content max-w-4xl">
+            <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-secondary-color"><i class="fas fa-cogs mr-2"></i> Dashboard Penjual (Peninjauan Data)</h2>
+                <span class="close-btn cursor-pointer text-3xl text-gray-400 hover:text-red-500" onclick="closeModal('adminDashboardModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                
+                <p class="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 font-semibold mb-6">
+                    ⚠️ Mode Gratis (Hanya Baca): Untuk mengubah Nama Toko, Nomor WA, atau Produk, Anda harus **mengedit manual** file `config-web.json` di Gist GitHub Anda, lalu *refresh* halaman ini.
+                </p>
+
+                <div class="bg-gray-100 p-4 rounded-lg mb-6 border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800"><i class="fas fa-globe mr-2"></i> Data Toko Aktif</h3>
+                    <form id="webNameForm" onsubmit="event.preventDefault(); alert('TIDAK BISA SIMPAN. Data diambil dari Gist.');">
+                        <div class="mb-4">
+                            <label for="newWebName" class="block text-sm font-medium text-gray-700 mb-1">Nama Toko Aktif</label>
+                            <input type="text" id="newWebName" class="input-field w-full p-3 rounded-lg text-sm bg-gray-50 cursor-not-allowed" readonly>
+                        </div>
+                        <div class="mb-4">
+                            <label for="ownerWaNumber" class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp Owner (62xxxx)</label>
+                            <input type="text" id="ownerWaNumber" class="input-field w-full p-3 rounded-lg text-sm bg-gray-50 cursor-not-allowed" readonly>
+                        </div>
+                        <div class="mb-4">
+                            <label for="danaNumber" class="block text-sm font-medium text-gray-700 mb-1">No. DANA Pembayaran (08xxxx)</label>
+                            <input type="text" id="danaNumber" class="input-field w-full p-3 rounded-lg text-sm bg-gray-50 cursor-not-allowed" readonly>
+                        </div>
+                        <button type="button" class="admin-btn py-2 px-4 rounded-lg font-semibold text-white shadow-md opacity-50 cursor-not-allowed">
+                            <i class="fas fa-sync-alt mr-2"></i> Simpan (Nonaktif)
+                        </button>
+                    </form>
+                </div>
+                
+                <button type="button" onclick="alert('FITUR INI DINONAKTIFKAN. Silakan edit file config-web.json di Gist GitHub Anda.');" class="buy-btn admin-btn py-3 px-4 rounded-lg font-semibold shadow-md mb-6 opacity-50 cursor-not-allowed">
+                    <i class="fas fa-plus-circle mr-2"></i> Tambah Produk Baru (Nonaktif)
+                </button>
+                
+                <h3 class="text-xl font-semibold mb-3 mt-6 text-gray-800 border-b pb-2">Daftar Produk Aktif (Dari Gist)</h3>
+                
+                <div id="adminProductList" class="overflow-x-auto">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="uploadProductModal" class="modal" style="display: none;"></div>
+    
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold">Keranjang Belanja 🛒</h2>
+                <span class="close-btn cursor-pointer text-3xl text-gray-400 hover:text-red-500" onclick="closeModal('cartModal')">&times;</span>
+            </div>
+            <div id="cartItems" class="mb-6 max-h-80 overflow-y-auto">
+                <p class="text-gray-500 text-center">Keranjang Anda kosong.</p>
+            </div>
+            <div id="cartTotalContainer" class="bg-gray-100 p-4 rounded-md border border-gray-200 mb-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-semibold text-gray-700">Total:</span>
+                    <span id="cartTotal" class="text-2xl font-bold text-red-500">Rp0</span>
+                </div>
+            </div>
+            <button type="button" id="checkoutBtn" onclick="checkout()" class="buy-btn py-3 px-4 rounded-lg w-full font-semibold shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">
+                <i class="fas fa-money-check-alt mr-2"></i> Checkout
+            </button>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-blue-500"><i class="fas fa-wallet mr-2"></i> Pembayaran DANA</h2>
+                <span class="close-btn cursor-pointer text-3xl text-gray-400 hover:text-red-500" onclick="closeModal('paymentModal')">&times;</span>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-gray-700 mb-4">Total pembayaran Anda:</p>
+                <p id="paymentTotalDisplay" class="text-4xl font-bold text-red-600 mb-6">Rp0</p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                    <p class="text-blue-700 font-semibold mb-2">Transfer ke Nomor DANA:</p>
+                    <p id="danaNumberDisplay" class="text-2xl font-mono text-blue-900 bg-blue-100 p-2 rounded-md inline-block">08123456789</p>
+                </div>
+                
+                <div class="text-left mb-6 p-3 border-l-4 border-red-500 bg-red-50">
+                    <p class="font-bold text-red-600 mb-2"><i class="fas fa-exclamation-circle mr-2"></i> Wajib Diperhatikan:</p>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                        <li>Transfer sesuai nominal total.</li>
+                        <li>**Ambil Screenshot** bukti transfer DANA Anda.</li>
+                        <li>Klik tombol di bawah untuk konfirmasi pesanan dan kirim bukti transfer ke WhatsApp Owner.</li>
+                    </ol>
+                </div>
+
+                <button onclick="sendWaConfirmation()" class="dana-btn py-3 px-4 rounded-lg w-full font-semibold text-white shadow-md">
+                    <i class="fab fa-whatsapp mr-2"></i> Konfirmasi Pesanan via WhatsApp
+                </button>
+                <button onclick="closeModal('paymentModal')" class="mt-4 text-gray-500 hover:text-gray-700 text-sm">Kembali ke Keranjang</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content max-w-xl">
+            <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+                <h2 id="detailModalTitle" class="text-2xl font-bold text-red-500"></h2>
+                <span class="close-btn cursor-pointer text-3xl text-gray-400 hover:text-red-500" onclick="closeModal('productDetailModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                
+                <div class="w-full h-80 overflow-hidden rounded-lg mb-4 bg-gray-100 flex items-center justify-center border border-gray-200">
+                    <img id="detailModalImage" src="" alt="Gambar Produk" class="max-w-full max-h-full object-contain transition-all duration-300">
+                </div>
+
+                <div id="detailThumbnailContainer" class="flex space-x-2 overflow-x-auto pb-2 mb-4">
+                    </div>
+                
+                <h3 class="text-xl font-bold text-red-600 mb-3" id="detailModalPrice"></h3>
+                <p class="text-gray-700 mb-6" id="detailModalDesc"></p>
+
+                <button id="detailModalAddToCartBtn" class="buy-btn py-3 px-4 rounded-lg w-full font-semibold text-white shadow-md mt-2">
+                    <i class="fas fa-cart-plus mr-2"></i> Tambah ke Keranjang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 mt-12 border-t border-gray-200 text-gray-500">
+        <p class="text-sm">&copy; 2025 <span id="footerWebName">TomiFood</span>. All rights reserved.</p>
+        <a href="#" id="helpWaLink" class="inline-flex items-center text-sm text-red-500 hover:text-red-700 transition-colors mt-2" target="_blank">
+            <i class="fab fa-whatsapp mr-2"></i>
+            Butuh Bantuan?
+        </a>
+    </footer>
+
+    <script>
+        // --- KONFIGURASI GITHUB GIST (URL STABIL ANDA) ---
+        // URL ini tidak berubah meskipun Anda update Gist.
+        const GIST_RAW_URL = 'https://gist.githubusercontent.com/Tomii02/4e103260f10f7ebd805426c54a2a3d3d/raw/config-web.json'; 
+
+        
+        // Variabel Global (akan diisi dari Gist)
+        let webConfig = {};
+        let products = [];
+        
+        const ADMIN_PASSWORD = '4321';
+        let cart = JSON.parse(localStorage.getItem('tomiFoodCart')) || [];
+
+        // --- FUNGSI DATA GLOBAL (GITHUB GIST) ---
+
+        const fetchGlobalData = async () => {
+            try {
+                // Tambahkan parameter acak untuk menghindari caching
+                const response = await fetch(`${GIST_RAW_URL}?t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error('Gagal mengambil data dari Gist. Cek URL Anda.');
+                
+                const data = await response.json();
+                
+                webConfig = data.config;
+                products = data.products;
+                
+                updateWebNameDisplay();
+                updateHelpWaLink();
+                renderProducts();
+                
+            } catch (error) {
+                console.error('Gagal memuat data toko dari Gist:', error);
+                // Jika gagal, gunakan data darurat dan log error
+                alert('⚠️ Gagal memuat data toko. Cek koneksi atau URL Gist di kode Anda.');
+                webConfig = { webName: 'TomiFood Gagal', ownerWa: '6280000', danaNumber: '0000' };
+                products = [];
+                updateWebNameDisplay();
+                updateHelpWaLink();
+                renderProducts();
+            }
+        };
+        
+        // --- FUNGSI UMUM & UTILITY ---
+        const formatRupiah = (number) => {
+            return `Rp${number.toLocaleString('id-ID')}`;
+        };
+
+        const updateWebNameDisplay = () => {
+            const name = webConfig.webName;
+            document.getElementById('webNameDisplay').innerHTML = `<i class="fas fa-utensils mr-2"></i>${name}`;
+            document.getElementById('webTitle').textContent = `${name} - Toko Makanan Online`;
+            document.getElementById('footerWebName').textContent = name;
+        };
+
+        const updateHelpWaLink = () => {
+            const waLinkElement = document.getElementById('helpWaLink');
+            const defaultMessage = encodeURIComponent(`Halo ${webConfig.webName} Admin, saya butuh bantuan mengenai pemesanan di toko online Anda.`);
+            waLinkElement.href = `https://wa.me/${webConfig.ownerWa}?text=${defaultMessage}`;
+        };
+
+        const saveCart = () => {
+            localStorage.setItem('tomiFoodCart', JSON.stringify(cart));
+            updateCartCount();
+        };
+
+        window.closeModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        // --- FUNGSI DETAIL PRODUK (DENGAN GALERI BARU) ---
+        window.showProductDetail = (productId) => {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const mainImage = document.getElementById('detailModalImage');
+            const thumbnailContainer = document.getElementById('detailThumbnailContainer');
+            thumbnailContainer.innerHTML = ''; // Kosongkan galeri lama
+
+            document.getElementById('detailModalTitle').textContent = product.name;
+            document.getElementById('detailModalPrice').textContent = formatRupiah(product.price);
+            document.getElementById('detailModalDesc').textContent = product.desc; 
+            
+            // Menggunakan array 'images', jika kosong, pakai placeholder
+            const images = product.images && product.images.length > 0 
+                           ? product.images 
+                           : ["https://via.placeholder.com/300x300?text=No+Image"];
+
+            // 1. Set gambar utama ke gambar pertama
+            mainImage.src = images[0];
+
+            // 2. Buat thumbnail
+            images.forEach((url, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = url;
+                thumb.alt = `Thumbnail ${index + 1}`;
+                thumb.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'cursor-pointer', 'border-2', 'border-gray-200', 'hover:border-red-500', 'transition-all');
+                
+                // Event listener untuk mengganti gambar utama
+                thumb.onclick = () => {
+                    mainImage.src = url;
+                    // Hapus highlight dari semua thumbnail, lalu tambahkan ke yang diklik
+                    Array.from(thumbnailContainer.children).forEach(t => t.classList.remove('border-red-500'));
+                    thumb.classList.add('border-red-500');
+                };
+
+                // Tandai thumbnail pertama sebagai aktif
+                if (index === 0) {
+                     thumb.classList.add('border-red-500');
+                }
+
+                thumbnailContainer.appendChild(thumb);
+            });
+
+            const addToCartBtn = document.getElementById('detailModalAddToCartBtn');
+            addToCartBtn.onclick = () => {
+                addToCart(product.id);
+                closeModal('productDetailModal');
+            };
+
+            document.getElementById('productDetailModal').style.display = 'flex';
+        };
+
+
+        // --- FUNGSI PRODUK & KERANJANG (Diperbarui: Tombol 'Tambah' HANYA di Detail) ---
+        
+        const renderProducts = () => {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+            
+            if (products.length === 0) {
+                document.getElementById('noProducts').style.display = 'block';
+            } else {
+                document.getElementById('noProducts').style.display = 'none';
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                // Saat kartu diklik, ia akan menampilkan modal detail (showProductDetail)
+                card.setAttribute('onclick', `showProductDetail(${product.id})`); 
+                card.classList.add('product-card');
+                
+                // Ambil gambar pertama dari array 'images' atau placeholder
+                const imageSource = (product.images && product.images.length > 0) 
+                                    ? product.images[0] 
+                                    : "https://via.placeholder.com/300x150?text=TomiFood";
+                
+                // HANYA TAMPILKAN HARGA SAJA, TANPA TOMBOL TAMBAH
+                card.innerHTML = `
+                    <img src="${imageSource}" alt="${product.name}" class="product-img w-full">
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-semibold mb-1 text-gray-800">${product.name}</h3>
+                        <p class="text-sm text-gray-500 mb-2 truncate">${product.desc}</p>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xl font-bold text-red-600 mb-0">${formatRupiah(product.price)}</p>
+                        </div>
+                `;
+                productList.appendChild(card);
+            });
+        };
+        
+        window.addToCart = (productId) => {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                // Diperlukan imageSource untuk cart render
+                const imageSource = (product.images && product.images.length > 0) ? product.images[0] : "https://via.placeholder.com/100x100?text=TomiFood";
+                
+                cart.push({ 
+                    ...product, 
+                    quantity: 1, 
+                    cartItemId: Date.now(), 
+                    // Simpan hanya 1 gambar utama untuk tampilan keranjang
+                    image: imageSource 
+                });
+            }
+            
+            saveCart();
+            alert(`${product.name} berhasil ditambahkan ke keranjang!`);
+        };
+
+        const updateCartCount = () => {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            cartCountElement.textContent = count;
+            if (count > 0) {
+                cartCountElement.classList.remove('hidden');
+            } else {
+                cartCountElement.classList.add('hidden');
+            }
+        };
+
+        const renderCart = () => {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartTotalElement = document.getElementById('cartTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `<p class="text-gray-500 text-center">Keranjang Anda kosong.</p>`;
+                checkoutBtn.disabled = true;
+                cartTotalElement.textContent = formatRupiah(0);
+                return;
+            }
+
+            checkoutBtn.disabled = false;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const itemElement = document.createElement('div');
+                itemElement.classList.add('flex', 'justify-between', 'items-center', 'py-3', 'border-b', 'border-gray-100');
+                
+                itemElement.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md">
+                        <div>
+                            <p class="text-md font-medium text-gray-800">${item.name}</p>
+                            <p class="text-sm font-light text-red-500">${formatRupiah(item.price)}</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex items-center space-x-3">
+                        <div class="flex items-center border border-gray-300 rounded-lg">
+                            <button onclick="decreaseQuantity(${item.cartItemId})" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg">-</button>
+                            <span class="px-3 text-sm font-medium">${item.quantity}</span>
+                            <button onclick="increaseQuantity(${item.cartItemId})" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg">+</button>
+                        </div>
+                        <p class="text-lg font-bold text-red-600 w-24">${formatRupiah(itemTotal)}</p>
+                        <button onclick="removeFromCart(${item.cartItemId})" class="text-gray-400 hover:text-red-500 text-lg">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemElement);
+            });
+            cartTotalElement.textContent = formatRupiah(total);
+        };
+        
+        window.showCartModal = () => {
+            renderCart();
+            document.getElementById('cartModal').style.display = 'flex';
+        };
+
+        window.increaseQuantity = (cartItemId) => {
+            const item = cart.find(i => i.cartItemId === cartItemId);
+            if (item) {
+                item.quantity += 1;
+                saveCart();
+                renderCart();
+            }
+        };
+
+        window.decreaseQuantity = (cartItemId) => {
+            const item = cart.find(i => i.cartItemId === cartItemId);
+            if (item && item.quantity > 1) {
+                item.quantity -= 1;
+                saveCart();
+                renderCart();
+            } else if (item && item.quantity === 1) {
+                removeFromCart(cartItemId);
+            }
+        };
+
+        window.removeFromCart = (cartItemId) => {
+            cart = cart.filter(item => item.cartItemId !== cartItemId);
+            saveCart();
+            renderCart();
+        };
+
+        // --- FUNGSI CHECKOUT DANA & WA ---
+
+        window.checkout = () => {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            if (cart.length === 0) {
+                alert('Keranjang Anda kosong.');
+                return;
+            }
+
+            document.getElementById('paymentTotalDisplay').textContent = formatRupiah(total);
+            document.getElementById('danaNumberDisplay').textContent = webConfig.danaNumber;
+            closeModal('cartModal');
+            document.getElementById('paymentModal').style.display = 'flex';
+        };
+
+        window.sendWaConfirmation = () => {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            let message = `*Orderan Baru ${webConfig.webName}*
+            
+Total Pembayaran: *${formatRupiah(total)}*
+Metode: DANA (${webConfig.danaNumber})
+
+---
+Detail Pesanan:
+`;
+            cart.forEach(item => {
+                message += `\n- ${item.name} (${item.quantity}x) - ${formatRupiah(item.price * item.quantity)}`;
+            });
+            
+            message += `\n\n[Mohon kirimkan screenshot bukti transfer Anda di chat ini.]`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const waLink = `https://wa.me/${webConfig.ownerWa}?text=${encodedMessage}`;
+            
+            // Kosongkan keranjang setelah konfirmasi dikirim
+            cart = [];
+            saveCart();
+            closeModal('paymentModal');
+            renderCart();
+            
+            window.open(waLink, '_blank');
+        };
+
+        // --- FUNGSI ADMIN (HANYA REVIEW DATA) ---
+
+        window.showPasswordModal = () => {
+            document.getElementById('passwordModal').style.display = 'flex';
+        };
+
+        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const enteredPassword = document.getElementById('adminPassword').value.trim();
+            
+            if (enteredPassword === ADMIN_PASSWORD) {
+                closeModal('passwordModal');
+                showAdminDashboard();
+            } else {
+                alert('Password salah. Akses ditolak!');
+            }
+            document.getElementById('adminPassword').value = '';
+        });
+        
+        window.showAdminDashboard = () => {
+            // Isi form dengan data yang dimuat dari Gist
+            document.getElementById('newWebName').value = webConfig.webName;
+            document.getElementById('ownerWaNumber').value = webConfig.ownerWa;
+            document.getElementById('danaNumber').value = webConfig.danaNumber;
+            
+            renderAdminProducts();
+            document.getElementById('adminDashboardModal').style.display = 'flex';
+        };
+        
+        const renderAdminProducts = () => {
+             const adminList = document.getElementById('adminProductList');
+             if (products.length === 0) {
+                 adminList.innerHTML = `<p class="text-center py-4 text-gray-500">Belum ada produk. Tambahkan di GIST GitHub Anda!</p>`;
+                 return;
+             }
+ 
+             let tableHTML = `
+                 <p class="text-sm text-red-500 mb-3 font-semibold">Data di bawah ini dimuat langsung dari Gist:</p>
+                 <table class="min-w-full divide-y divide-gray-200">
+                     <thead class="bg-gray-50">
+                         <tr>
+                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                         </tr>
+                     </thead>
+                     <tbody class="bg-white divide-y divide-gray-200">
+             `;
+             
+             products.forEach(product => {
+                 tableHTML += `
+                     <tr>
+                         <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.id}</td>
+                         <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${product.name}</td>
+                         <td class="px-3 py-4 whitespace-nowrap text-sm text-red-500">${formatRupiah(product.price)}</td>
+                         <td class="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                             <span class="text-gray-400">Edit di Gist</span>
+                         </td>
+                     </tr>
+                 `;
+             });
+             
+             tableHTML += `</tbody></table>`;
+             adminList.innerHTML = tableHTML;
+        };
+
+        // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchGlobalData(); // Mengambil data dari Gist (Global)
+            updateCartCount();
+        });
+    </script>
+</body>
+</html>
